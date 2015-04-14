@@ -1,0 +1,6 @@
+http://music.163.com/#/song?id=28377225
+播放的地址。
+/api/playlist/detail?id=59628093&offset=0&total=true&limit=1001&csrf_token=2facf980cb2b4cd8fa02c160bb70f9fb
+歌单地址。
+
+/api/push/init
