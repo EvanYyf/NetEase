@@ -80,25 +80,24 @@ class WebApi:
         """
         url = 'http://music.163.com/api/user/playlist/?offset=%s&limit=1000&uid=%s'%(offset, uid)
         html = self.httpRequest(url, method='GET', cookies=self.cookies)
-        return html
+        return html['playlist']
 
-    def all_playlist(self, cat='流行', types='hot', offset=0, index=1):
+    def all_playlist(self, cat='全部歌单', types='hot', offset=0, index=1):
         """
             全部歌单。列表字典形式。
         """
         url = 'http://music.163.com/api/playlist/list?cat=%s&type=%s&order=%s&offset=%d&total=true&limit=30&index=%d)'\
             % (urllib.parse.quote(cat), types, types, offset, index)
         html = self.httpRequest(url, method='GET', cookies=self.cookies)
-        return html
+        return html['playlists']
 
     def details_playlist(self, id):
         """
             歌单详情。
         """
         url = 'http://music.163.com/api/v2/playlist/detail?id=%d' % (id)
-        print(self.cookies)
         html = self.httpRequest(url, method="GET", cookies=self.cookies)
-        return html
+        return html['playlist']
 
     def search(self, s, offset=0, limit=100, total='true', stype=1):
         """
@@ -114,19 +113,32 @@ class WebApi:
             'type': stype
         }
         html = self.httpRequest(url, method='POST', data=data, cookies=self.cookies)
-        return html[1]
+        return html[1]['result']
 
-    def myHost(self):
+    def newsong(self, areaID=0, offset=0, total='true', limit=100):
         """
-            返回主页信息。
-            /api/playlist/detail?id=59628093&offset=0&total=true&limit=1001&csrf_token=2facf980cb2b4cd8fa02c160bb70f9fb
+            最新音乐--新歌速递。
+            areaID(0全部, 9华语, 96欧美, 16韩国, 8日本。)
         """
+        url = 'http://music.163.com/api/discovery/new/songs?areaId=%d&offset=%d&total=%s&limit=%d' %\
+              (areaID, offset, total, limit)
+        html = self.httpRequest(url, method='GET', cookies=self.cookies)
+        return html['data']
 
-
+    def fnewsong(self, year=2015, month=4, area='ALL'):
+        """
+            最新音乐--新碟上架。
+            /api/discovery/new/albums/area?year=2015&month=4&area=ALL&type=hot&offset=0&total=true&limit=20&rcmd=true
+            area(ALL全部, ZH华语, EA欧美, KR韩国, 日本JP)
+        """
+        url = 'http://music.163.com/api/discovery/new/albums/area?year=%d&month=%d&area=%s&type=hot&offset=0&total=true&limit=20&rcmd=true' \
+              % (year, month, area)
+        html = self.httpRequest(url, method="GET", cookies=self.cookies)
+        return html['monthData']
 
 if __name__ == '__main__':
     main = WebApi()
-    req = main.details_playlist(65249986)
+    req = main.fnewsong()
     # rep = requests.get('http://music.163.com/api/user/playlist/?offset=0&limit=1000&uid=54370871', cookies=req)
     print(req)
     # print(req.text)
