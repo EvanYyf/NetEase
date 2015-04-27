@@ -1,6 +1,6 @@
 # 学习制作网易云音乐客户端。
 # 此文件实现登陆查询等一系列功能。
-
+__author__ = 'weiy'
 """
 4.10日。
 """
@@ -36,7 +36,7 @@ class WebApi:
             'os': 'pc'
         }
 
-    def httpRequest(self, action, method="GET", add=None, data=None, headers=headers, cookies='', timeout=default_timeout, urlencode='utf-8'): 
+    def httpRequest(self, action, method="GET", add=None, data=None, headers=headers, cookies='', timeout=default_timeout, urlencode='utf-8'):
         """
             默认以get方式请求，
             GET方式附加内容用add参数，POST方式提交内容用data参数。
@@ -78,7 +78,7 @@ class WebApi:
         """
             个人歌单。
         """
-        url = 'http://music.163.com/api/user/playlist/?offset=%s&limit=1000&uid=%s'%(offset, uid)
+        url = 'http://music.163.com/api/user/playlist/?offset=%s&limit=1000&uid=%s' % (offset, uid)
         html = self.httpRequest(url, method='GET', cookies=self.cookies)
         return html['playlist']
 
@@ -95,9 +95,9 @@ class WebApi:
         """
             歌单详情。
         """
-        url = 'http://music.163.com/api/v2/playlist/detail?id=%d' % (id)
+        url = 'http://music.163.com/api/playlist/detail?id=%d' % (id)
         html = self.httpRequest(url, method="GET", cookies=self.cookies)
-        return html['playlist']
+        return html['result']
 
     def search(self, s, offset=0, limit=100, total='true', stype=1):
         """
@@ -113,7 +113,19 @@ class WebApi:
             'type': stype
         }
         html = self.httpRequest(url, method='POST', data=data, cookies=self.cookies)
-        return html[1]['result']
+        try:
+            return html[1]['result']
+        except:
+            return "Not Found!"
+
+    def details_search(self, id):
+        """
+            搜索结果详情，返回歌曲URL。
+        """
+        id = str(id)
+        url = "http://music.163.com//api/song/detail/?id=%s&ids=%s" % (id, urllib.parse.quote('[%s]' % (id)))
+        html = self.httpRequest(url, method='GET', cookies=self.cookies)
+        return html['songs'][0]['mp3Url']
 
     def newsong(self, areaID=0, offset=0, total='true', limit=100):
         """
@@ -128,7 +140,6 @@ class WebApi:
     def fnewsong(self, year=2015, month=4, area='ALL'):
         """
             最新音乐--新碟上架。
-            /api/discovery/new/albums/area?year=2015&month=4&area=ALL&type=hot&offset=0&total=true&limit=20&rcmd=true
             area(ALL全部, ZH华语, EA欧美, KR韩国, 日本JP)
         """
         url = 'http://music.163.com/api/discovery/new/albums/area?year=%d&month=%d&area=%s&type=hot&offset=0&total=true&limit=20&rcmd=true' \
@@ -138,7 +149,9 @@ class WebApi:
 
 if __name__ == '__main__':
     main = WebApi()
-    req = main.fnewsong()
-    # rep = requests.get('http://music.163.com/api/user/playlist/?offset=0&limit=1000&uid=54370871', cookies=req)
-    print(req)
+    req = main.search('刘德华')
+    for i in req['songs']:
+        print(i)
+
+
     # print(req.text)
