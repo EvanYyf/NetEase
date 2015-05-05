@@ -1,0 +1,16 @@
+QListWidget{
+    background: #555555;
+
+}
+
+QListWidget::item:hover{
+    background: #555555;
+    color: gray;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+QListWidget::item:hover{
+    background: #000000;
+
+}

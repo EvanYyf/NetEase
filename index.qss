@@ -1,0 +1,65 @@
+QWidget#index1, QWidget#index2, QWidget#index3{
+    height: 2000px;
+    width: 800px;
+    background: #000000;
+}
+
+QLabel{
+    color: gray;
+}
+
+QLabel#pictures{
+    width: 120px;
+    height: 120px;
+    color: gray;
+}
+QPushButton{
+    text-align: left;
+    font: auto;
+    color: #D9D9D9;
+    width: 100px;
+    border: 0px;
+    background: #0000000;
+}
+
+QPushButton::hover{
+    text-align: left;
+    font: auto;
+    font-weight: bold;
+    color: #FFFFFF;
+    width: 100px;
+    border: 0px;
+    background: #0000000;
+}
+
+QTabWidget::pane{
+    border: none;
+}
+
+QTabBar::tab{
+    height: 15px;
+    width: 50px;
+    border: 5px solid;
+    padding: 5px;
+    border-radius: 15px;
+    background: #363636;
+    color: gray;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+QTabBar::tab:first{
+    margin-left: 275px;
+}
+
+QTabBar::tab:hover{
+    background: #222222;
+}
+
+QTabBar::tab:selected{
+    background: #000000;
+}
+
+QGroupBox{
+    border: 0px;
+}

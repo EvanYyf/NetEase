@@ -82,7 +82,7 @@ class WebApi:
         html = self.httpRequest(url, method='GET', cookies=self.cookies)
         return html['playlist']
 
-    def all_playlist(self, cat='全部歌单', types='hot', offset=0, index=1):
+    def all_playlist(self, cat='全部歌单', types='all', offset=0, index=1):
         """
             全部歌单。列表字典形式。
         """
@@ -149,9 +149,6 @@ class WebApi:
 
 if __name__ == '__main__':
     main = WebApi()
-    req = main.search('刘德华')
-    for i in req['songs']:
+    req = main.newsong()
+    for i in req:
         print(i)
-
-
-    # print(req.text)

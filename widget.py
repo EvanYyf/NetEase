@@ -2,15 +2,11 @@ __author__ = 'weiy'
 """
 4.15.
 """
-import os
 import sys
-import api
 import shutil
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtNetwork import *
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
+from index import Index
+from func import *
 
 
 class Main(QWidget):
@@ -25,12 +21,16 @@ class Main(QWidget):
         self.ids = {}
         # 歌曲图片。
         self.pictures = {}
+
         self.setObjectName('Main')
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setWindowTitle('NetEase')
         self.setWindowIcon(QIcon('icons/format.ico'))
         # 功能。
         self.function = api.WebApi()
+        # 主页及其他功能。
+        self.index = Index(self)
+        self.current_list = SongsWindow(self)
         # -------
         # 待改进。
         self.resize(1000, 650)
@@ -46,6 +46,7 @@ class Main(QWidget):
         self.nextSong = QPushButton(self)
         self.beforeSong = QPushButton(self)
         self.pause = QPushButton(self)
+        self.btn_list = QPushButton(self)
         # 按钮end.
         # -------
         # 标签start.
@@ -56,16 +57,22 @@ class Main(QWidget):
         self.spacing = QLabel(self)
         self.spacing2 = QLabel(self)
         self.spacing3 = QFrame()
-        self.spacing3.setFrameShape(QFrame.VLine)
-        self.spacing3.setFrameShadow(QFrame.Plain)
+        self.spacing4 = QFrame()
         self.songs_list = QLabel(self)
         self.song_pic = QLabel(self)
+        self.time1 = QLabel(self)
+        self.time2 = QLabel(self)
         # 歌单内的信息。
         self.detail_pic = QLabel(self)
+        self.detail_pic.hide()
         self.detail_author = QLabel(self)
+        self.detail_author.hide()
         self.detail_tag = QLabel(self)
+        self.detail_tag.hide()
         self.detail_name = QLabel(self)
+        self.detail_name.hide()
         self.detail_description = QLabel(self)
+        self.detail_description.hide()
         # 标签end.
         # -------
         # 输入框start.
@@ -83,13 +90,11 @@ class Main(QWidget):
         # 表格end.
         # -------
         # 滚动条start。
-        self.slider = QSlider()
+        self.slider = QSlider(self)
         # 滚动条end.
         # -------
-        # 时间组件start。
-        self.time1 = QLCDNumber()
-        self.time2 = QLCDNumber()
-        # 时间组件end.
+        # 播放功能。
+        self.player = QMediaPlayer()
         # -------
         # 布局与属性设置。
         self.mainLayout = QGridLayout()
@@ -104,21 +109,19 @@ class Main(QWidget):
         self.labels()
         self.lines()
         self.sliders()
-        # -------
-        # 播放功能。
-        self.player = QMediaPlayer()
-        self.player.setVolume(100)
+        self.medias()
         # -------
         # 其他功能。
         self.load_login()
         self.manager = QNetworkAccessManager()
         self.setLayout(self.layouts())
 
+    # 登陆部分start.
     def lwindow(self):
         """
             登陆框。
         """
-        login = LoginWindow()
+        login = LoginWindow(self)
         login.exec_()
 
     def load_login(self):
@@ -167,6 +170,9 @@ class Main(QWidget):
         self.playlist.clear()
         shutil.rmtree('data/cookies')
         os.makedirs('.' + '/data' + '/cookies')
+    # 登陆部分end.
+
+    # 内置组件部分start.
 
     def buttons(self):
         """
@@ -175,7 +181,7 @@ class Main(QWidget):
         # 退出。
         self.btn_exit.setObjectName('exit')
         self.btn_exit.setText('×')
-        self.btn_exit.clicked.connect(exit)
+        self.btn_exit.clicked.connect(sys.exit)
         self.btn_exit.setToolTip('退出')
         # 最小化。
         self.btn_min.setObjectName('mini')
@@ -198,7 +204,7 @@ class Main(QWidget):
         self.find_music.setObjectName('find')
         self.find_music.setIcon(QIcon('icons/music.png'))
         self.find_music.setText("发现音乐")
-        self.find_music.clicked.connect(self.index)
+        self.find_music.clicked.connect(self.show_index)
         # 播放页。
         self.play.setObjectName('play')
         self.play.setToolTip("播放歌曲")
@@ -216,6 +222,9 @@ class Main(QWidget):
         self.pause.setToolTip("暂停播放")
         self.pause.hide()
         self.pause.clicked.connect(self.pause_song)
+        # 歌曲列表。
+        self.btn_list.setObjectName('songslist')
+        self.btn_list.clicked.connect(self.songslist)
 
     def labels(self):
         """
@@ -255,6 +264,19 @@ class Main(QWidget):
         p3 = QPixmap()
         p3.load('icons/nosong.png')
         self.song_pic.setPixmap(p3)
+        # 时间显示组件。
+        self.time1.setObjectName("time1")
+        self.time1.setText('00:00')
+        self.time1.setAlignment(Qt.AlignCenter | Qt.AlignRight)
+        self.time2.setObjectName("time2")
+        self.time2.setText('00:00')
+        # 间隔装饰。
+        self.spacing3.setFrameShape(QFrame.VLine)
+        self.spacing3.setFrameShadow(QFrame.Plain)
+        self.spacing3.setLineWidth(2)
+        self.spacing4.setFrameShape(QFrame.HLine)
+        self.spacing3.setFrameShadow(QFrame.Plain)
+        self.spacing3.setLineWidth(2)
 
     def lines(self):
         """
@@ -264,27 +286,31 @@ class Main(QWidget):
         self.search_line.setPlaceholderText('搜索音乐。')
 
     def sliders(self):
+        """
+            滚动组件。
+        """
         self.slider.setObjectName("slider")
         self.slider.setOrientation(Qt.Horizontal)
+        self.slider.sliderMoved.connect(self.slider_media)
+        self.slider.sliderReleased.connect(self.slider_setdone)
+    # 内置组件备份end.
 
-    def index(self):
-        """
-            主页面。
-        """
+    # 歌曲部分start.
 
     def tables(self):
         """
             表格呈现歌单详细信息。
         """
-        self.table.setColumnCount(5)
-        self.table.setHorizontalHeaderLabels([' ', '操作', '音乐', '歌手', '专辑'])
+        self.table.setColumnCount(6)
+        self.table.setHorizontalHeaderLabels([' ', '操作', '音乐', '歌手', '专辑', '时长'])
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         # 设置列宽。
         self.table.setColumnWidth(0, 40)
         self.table.setColumnWidth(1, 40)
         self.table.setColumnWidth(2, 360)
-        self.table.setColumnWidth(3, 178)
-        self.table.setColumnWidth(4, 170)
+        self.table.setColumnWidth(3, 140)
+        self.table.setColumnWidth(4, 140)
+        self.table.setColumnWidth(5, 60)
         # 设置充满表宽。
         self.table.horizontalHeader().setStretchLastSection(True)
         # 设置表头亮度。
@@ -297,6 +323,14 @@ class Main(QWidget):
         self.table.itemDoubleClicked.connect(self.set_song)
         self.table.itemDoubleClicked.connect(self.play_song)
 
+    def medias(self):
+        """
+            设置播放器。
+        """
+        self.player.setVolume(100)
+        self.player.stateChanged.connect(self.loop)
+        self.player.positionChanged.connect(self.set_time)
+
     def song_search(self):
         """
             搜索功能。
@@ -304,20 +338,12 @@ class Main(QWidget):
             id: 歌曲id。
             artists: [0][1]['name']歌曲作者可能不止一人，['img1v1Url']作者头像。
             album: ['name']专辑名称。
-        """
-        self.tables()
-        self.table.show()
-        # 加载图片。
-        pic = QPixmap()
-        pic.load('icons/search2.jpg')
-        self.detail_pic.setPixmap(pic.scaled(200, 200))
-        self.detail_name.setText('遨游在音乐的天空。')
-        self.detail_author.setText("It's my sky!")
-        self.detail_tag.setText('『Music, music』')
-        self.detail_description.setText('〖Search Result〗')
+        """ 
         # 暂时只做一页。翻页属后续功能。
         text = self.search_line.text()
         if text:
+            self.tables()
+            self.hide_index()
             details = self.function.search(text)
             try:
                 # 搜到没有的情况。
@@ -333,7 +359,7 @@ class Main(QWidget):
                 count = songcount
             self.table.setRowCount(count)
             for i in range(count):
-                for j in range(1, 5):
+                for j in range(1, 6):
                     self.ids[str(i)] = songs[i]['id']
                     self.table.setItem(i, 0, QTableWidgetItem(str(i)))
                     if j == 1:
@@ -343,10 +369,24 @@ class Main(QWidget):
                     elif j == 3:
                         people = ','.join([c['name'] for c in songs[i]['artists']])
                         self.table.setItem(i, j, QTableWidgetItem(people))
-                    else:
+                    elif j == 4:
                         self.table.setItem(i, j, QTableWidgetItem(songs[i]['album']['name']))
+                    else:
+                        minuties = songs[i]['duration'] // 60000
+                        seconds = songs[i]['duration'] // 1000 % 60
+                        time = QTime(0, minuties, seconds)
+                        self.table.setItem(i, j, QTableWidgetItem(time.toString("mm:ss")))
         else:
-            pass
+            return
+
+        # 加载图片。
+        pic = QPixmap()
+        pic.load('icons/search2.jpg')
+        self.detail_pic.setPixmap(pic.scaled(200, 200))
+        self.detail_name.setText('遨游在音乐的天空。')
+        self.detail_author.setText("It's my sky!")
+        self.detail_tag.setText('『Music, music』')
+        self.detail_description.setText('〖Search Result〗')
 
     def play_lists(self):
         """
@@ -356,7 +396,7 @@ class Main(QWidget):
             self.playlist.addItem(QListWidgetItem(QIcon('icons/Heart.png'), i['name']))
             self.result[i['name']] = i['id']
             # 对应歌单的id添加。
-        self.playlist.currentItemChanged.connect(lambda: self.show_playlist(self.playlist.currentItem().text()))
+        self.playlist.clicked.connect(lambda: self.show_playlist(self.playlist.currentItem().text()))
 
     def show_playlist(self, name):
         """
@@ -374,12 +414,14 @@ class Main(QWidget):
             , ['album']['name']专辑名称，['blurPicUrl']图片。
         """
         self.tables()
-        self.table.show()
-        details = self.function.details_playlist(self.result[name])
+        self.hide_index()
+        details = self.function.details_playlist(self.result[name.replace('\n', '')])
         self.table.setRowCount(details['trackCount'])
         # 加载在表格里。
         for i in range(len(details['tracks'])):
-            for j in range(1, 5):
+            for j in range(1, 6):
+                if not details['tracks'][i]['bMusic']['name']:
+                    self.playurl[str(i)] = details['tracks'][i]['mp3Url']
                 self.playurl[details['tracks'][i]['bMusic']['name']] = details['tracks'][i]['mp3Url']
                 self.pictures[details['tracks'][i]['bMusic']['name']] = details['tracks'][i]['album']['blurPicUrl']
                 # 设置序号。
@@ -387,17 +429,24 @@ class Main(QWidget):
                 if j == 1:
                     self.table.setItem(i, j, QTableWidgetItem(QIcon('icons/playlist.png'), ''))
                 elif j == 2:
-                    self.table.setItem(i, j, QTableWidgetItem(details['tracks'][i]['bMusic']['name']))
+                    if not details['tracks'][i]['bMusic']['name']:
+                        self.table.setItem(i, j, QTableWidgetItem(str(i)))
+                    else:
+                        self.table.setItem(i, j, QTableWidgetItem(details['tracks'][i]['bMusic']['name']))
                 elif j == 3:
                     people = ','.join([t['name'] for t in details['tracks'][i]['artists']])
                     self.table.setItem(i, j, QTableWidgetItem(people))
                 elif j == 4:
                     self.table.setItem(i, j, QTableWidgetItem(details['tracks'][i]['album']['name']))
+                elif j == 5:
+                    minuties = details['tracks'][i]['bMusic']['playTime'] // 60000
+                    seconds = details['tracks'][i]['bMusic']['playTime'] // 1000 % 60
+                    time = QTime(0, minuties, seconds)
+                    self.table.setItem(i, j, QTableWidgetItem(time.toString("mm:ss")))
         # 加载歌单图片。
         self.manager.clearAccessCache()
         pic = self.manager.get(QNetworkRequest(QUrl(details['coverImgUrl'])))
-        tmp = lambda: load_pic(pic)
-        self.manager.finished.connect(tmp)
+        self.manager.finished.connect(lambda: load_pic(pic))
 
         def load_pic(picture):
             p4 = QPixmap()
@@ -409,12 +458,16 @@ class Main(QWidget):
         self.detail_tag.setText('『' + str(details['tags'])[1:-1] + '』')
         try:
             self.detail_description.setText('〖' + details['description'] + '〗')
+            self.detail_description.setWordWrap(True)
         except TypeError:
             self.detail_description.setText('〖〗')
 
     def set_song(self):
-        """歌单里的连接。"""
-        self.manager.disconnect()
+        """设置歌曲链接连接。"""
+        try:
+            self.manager.disconnect()
+        except TypeError:
+            pass
         self.manager.clearAccessCache()
         try:
             text = self.table.item(self.table.currentRow(), 2).text()
@@ -422,16 +475,23 @@ class Main(QWidget):
             data = self.manager.get(QNetworkRequest(QUrl(self.pictures[text])))
             self.manager.finished.connect(lambda: self.load(data))
         except KeyError:
-            self.player.setMedia(QMediaContent(QUrl(self.function.details_search(self.ids[str(self.table.currentRow())]))))
+            try:
+                self.player.setMedia(QMediaContent(QUrl(self.function.details_search(self.ids[str(self.table.currentRow())]))))
+            except KeyError:
+                pass
 
     def play_song(self):
         """
             播放组件。
         """
         # BUG: 用isAudio判断是否为有效音频是特么的双击居然显示无效。
-        self.player.play()
-        self.play.hide()
-        self.pause.show()
+        try:
+            self.time2.setText(self.table.item(self.table.currentRow(), 5).text())
+            self.player.play()
+            self.play.hide()
+            self.pause.show()
+        except AttributeError:
+            return
 
     def pause_song(self):
         """
@@ -446,6 +506,8 @@ class Main(QWidget):
             停止组件。
         """
         self.player.stop()
+        self.pause.hide()
+        self.play.show()
 
     def next_song(self):
         """
@@ -486,6 +548,107 @@ class Main(QWidget):
         p = QPixmap()
         p.loadFromData(data.readAll())
         self.song_pic.setPixmap(p.scaled(64, 64))
+
+    def set_time(self):
+        """
+            设置当前时间。
+        """
+        times = self.player.position() / 1000
+        minuties = times // 60
+        seconds = times % 60
+        time = QTime(0, minuties, seconds)
+        self.time1.setText(time.toString("mm:ss"))
+        alltime = float(self.table.item(self.table.currentRow(), 5).text().replace(':', '.'))
+        curtime = float(time.toString('mm.ss'))
+        self.slider.setValue((curtime / alltime) * 100)
+
+    def slider_media(self):
+        """
+            拖动滚动条时时间的改变。
+        """
+        try:
+            self.player.positionChanged.disconnect()
+        except TypeError:
+            pass
+        alltime = float(self.table.item(self.table.currentRow(), 5).text().replace(':', '.'))
+        trans_alltime = int(alltime) * 60 + (alltime - int(alltime)) * 100
+        currentTime = trans_alltime * self.slider.value()
+        minuties = currentTime / 100 // 60
+        seconds = currentTime / 100 % 60
+        time = QTime(0, minuties, seconds)
+        self.time1.setText(time.toString("mm:ss"))
+
+    def slider_setdone(self):
+        """
+            鼠标放开后播放位置。待改进。
+        """
+        self.player.positionChanged.connect(self.set_time)
+        alltime = float(self.table.item(self.table.currentRow(), 5).text().replace(':', '.'))
+        trans_alltime = int(alltime) * 60 + (alltime - int(alltime)) * 100
+        currentTime = trans_alltime * self.slider.value()
+        self.player.setPosition(currentTime * 10)
+
+    def loop(self):
+        """
+            设置为循环播放。默认，有且只有这一个。- -。
+        """
+        if self.player.position() > 0 and self.player.state() == 0:
+            self.manager.disconnect()
+            self.manager.clearAccessCache()
+            text = self.table.item(self.table.currentRow()+1, 2).text()
+            self.table.setCurrentCell(self.table.currentRow()+1, 2)
+            self.player.setMedia(QMediaContent(QUrl(self.playurl[text])))
+            data = self.manager.get(QNetworkRequest(QUrl(self.pictures[text])))
+            self.manager.finished.connect(lambda: self.load(data))
+            self.play_song()
+
+    def songslist(self):
+        """
+            歌曲列表。
+        """
+        if self.current_list.flag:
+            self.current_list.show()
+            self.current_list.flag = False
+        else:
+            self.current_list.hide()
+            self.current_list.flag = True
+
+    # 歌曲部分end.
+    # -------
+    # 切换页面start。
+
+    def hide_index(self):
+        """
+            显示歌单详细信息。
+        """
+        self.centerLayout.setStretch(0, 160)
+        self.centerLayout.setStretch(1, 1)
+        self.centerLayout.setStretch(2, 850)
+        self.centerLayout.setStretch(3, 0)
+        self.index.hide()
+        self.detail_pic.show()
+        self.detail_name.show()
+        self.detail_author.show()
+        self.detail_tag.show()
+        self.detail_description.show()
+        self.table.show()
+
+    def show_index(self):
+        """
+            显示主页。
+        """
+        self.centerLayout.setStretch(0, 160)
+        self.centerLayout.setStretch(1, 1)
+        self.centerLayout.setStretch(2, 0)
+        self.centerLayout.setStretch(3, 850)
+        self.detail_pic.hide()
+        self.detail_name.hide()
+        self.detail_author.hide()
+        self.detail_tag.hide()
+        self.detail_description.hide()
+        self.table.hide()
+        self.index.show()
+    # 切换页面end.
 
     def layouts(self):
         """
@@ -537,9 +700,11 @@ class Main(QWidget):
         self.centerLayout.addLayout(self.leftLayout)
         self.centerLayout.addWidget(self.spacing3)
         self.centerLayout.addLayout(self.rightLayout)
+        self.centerLayout.addWidget(self.index)
         self.centerLayout.setStretch(0, 180)
         self.centerLayout.setStretch(1, 1)
-        self.centerLayout.setStretch(2, 830)
+        self.centerLayout.setStretch(2, 0)
+        self.centerLayout.setStretch(3, 830)
         self.mainLayout.addLayout(self.centerLayout, 2, 0, Qt.AlignTop | Qt.AlignLeft)
         # 中心布局end.
         # -------
@@ -553,12 +718,18 @@ class Main(QWidget):
         self.bottomLayout.addWidget(self.time1)
         self.bottomLayout.addWidget(self.slider)
         self.bottomLayout.addWidget(self.time2)
-        # self.bottomLayout.addStretch(1)
+        self.bottomLayout.addWidget(self.btn_list)
+        self.bottomLayout.setStretch(6, 1)
+        self.bottomLayout.setStretch(7, 6)
+        self.bottomLayout.setStretch(8, 1)
+        self.mainLayout.addWidget(self.spacing4, 3, 0, Qt.AlignTop)
         self.mainLayout.addLayout(self.bottomLayout, 3, 0, Qt.AlignBottom)
         # 下部分end.
         self.mainLayout.setRowStretch(1, 1)
         self.mainLayout.setRowStretch(2, 20)
         self.mainLayout.setRowStretch(3, 3)
+        # 其他。
+        self.mainLayout.addWidget(self.current_list, 2, 0, Qt.AlignBottom | Qt.AlignRight)
         return self.mainLayout
 
     """重写鼠标事件，实现窗口拖动。"""
@@ -568,137 +739,18 @@ class Main(QWidget):
             self.m_DragPosition = event.globalPos()-self.pos()
             event.accept()
 
-    def mouseMoveEvent(self, QMouseEvent):
+    def mouseMoveEvent(self, event):
         try:
-            if QMouseEvent.buttons() and Qt.LeftButton:
-                self.move(QMouseEvent.globalPos()-self.m_DragPosition)
-                QMouseEvent.accept()
+            if event.buttons() and Qt.LeftButton:
+                self.move(event.globalPos()-self.m_DragPosition)
+                event.accept()
         except AttributeError:
             pass
 
-    def mouseReleaseEvent(self, QMouseEvent):
-        self.m_drag=False
+    def mouseReleaseEvent(self, event):
+        self.m_drag = False
 
-
-class LoginWindow(QDialog):
-
-    """我来组成Login !"""
-    def __init__(self, parent=None):
-        super(LoginWindow, self).__init__(parent)
-        self.setObjectName("Login")
-        self.resize(200, 100)
-        self.setWindowIcon(QIcon('icons/login.png'))
-        self.setWindowTitle('Login')
-        # 按钮start.
-        self.btn_login = QPushButton('登陆', self)
-        # 按钮end.
-        # 标签start.
-        self.lbe_user = QLabel('用户名:', self)
-        self.lbe_password = QLabel('密码:', self)
-        self.text_user = QLineEdit()
-        self.text_pswd = QLineEdit()
-        self.lbe_hide = QLabel(self)
-        # 标签end.
-        # -------
-        # 头像下载。
-        self.down_manager = QNetworkAccessManager()
-        # -------
-        # 布局与属性设置。
-        self.buttons()
-        self.loginframe()
-        self.setLayout(self.vlay())
-        # -------
-        # 其他功能。
-
-    def buttons(self):
-        self.btn_login.setObjectName('logins')
-        self.btn_login.clicked.connect(self.lgn)
-
-    def loginframe(self):
-        self.text_user.setPlaceholderText("邮箱地址")
-        self.text_pswd.setPlaceholderText("密码")
-        self.text_pswd.setEchoMode(QLineEdit.Password)
-
-    def vlay(self):
-        vbox = QVBoxLayout()
-        vbox.addWidget(self.lbe_user)
-        vbox.addWidget(self.text_user)
-        vbox.addWidget(self.lbe_password)
-        vbox.addWidget(self.text_pswd)
-        vbox.addWidget(self.lbe_hide)
-        vbox.addWidget(self.btn_login)
-        vbox.addStretch(1)
-        return vbox
-
-    def lgn(self):
-        user = self.text_user.text()
-        pwd = self.text_pswd.text()
-        func = api.WebApi()
-        result = func.login(user, pwd)[1]
-        if result['code'] == 200:
-            self.saveCookies(result['account']['userName'], result['profile']['nickname'],\
-                             result['profile']['userId'])  # 保存cookies.
-            mainWindow.btn_login.setText(result['profile']['nickname'])   # 加载昵称。
-            mainWindow.btn_login.disconnect()
-            mainWindow.btn_login.clicked.connect(mainWindow.quit_login)
-            tdata = self.down_manager.get(QNetworkRequest(QUrl(result['profile']['avatarUrl'])))
-            self.down_manager.finished.connect(lambda: self.load_finish(tdata, result))    # 加载头像并保存。
-            mainWindow.result['uid'] = result['profile']['userId']
-            mainWindow.btn_login.setToolTip("登出")
-            mainWindow.play_lists()  # 加载歌单。
-        else:
-            self.lbe_hide.setText('登陆失败，检查后重试。')
-
-    def saveCookies(self, email, name, uid):
-        try:
-            os.chdir('.' + '/data' + '/cookies')
-        except:
-            os.mkdir('.' + '/data' + '/cookies')
-            os.chdir('.' + '/data' + '/cookies')
-        with open(email + '.dta', 'w') as f:
-            f.write(name + '\n' + str(uid) + '\n')
-        os.chdir('..')
-        os.chdir('..')
-
-    def load_finish(self, res, result):
-        """
-            加载头像并保存。
-        """
-        data = res.readAll()
-        header = QFile('data/cookies/header' + result['profile']['avatarUrl'][-4:])
-        header.open(QIODevice.WriteOnly)
-        header.write(data)
-        # 保存二进制文件。
-        img = QPixmap()
-        img.loadFromData(data)
-        mainWindow.lbe_pic.setStyleSheet('border: 0px;')
-        # 图片不是圆角。
-        mainWindow.lbe_pic.setPixmap(img.scaled(40, 40))
-        self.accept()
-
-
-    """重写鼠标事件，实现窗口拖动。"""
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.m_drag = True
-            self.m_DragPosition = event.globalPos()-self.pos()
-            event.accept()
-
-    def mouseMoveEvent(self, QMouseEvent):
-        try:
-            if QMouseEvent.buttons() and Qt.LeftButton:
-                self.move(QMouseEvent.globalPos()-self.m_DragPosition)
-                QMouseEvent.accept()
-        except AttributeError:
-            pass
-    def mouseReleaseEvent(self, QMouseEvent):
-        self.m_drag=False
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    with open('window.qss', 'r') as qss:
-        app.setStyleSheet(qss.read())
-    mainWindow = Main()
-    mainWindow.show()
-    sys.exit(app.exec_())
+    """按键绑定。。"""
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Enter-1:
+            self.song_search()
