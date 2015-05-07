@@ -36,6 +36,7 @@ class Index(QTabWidget):
         self.index1.setObjectName("index1")
         self.index1_area.setWidget(self.index1)
         self.index1_area.setWidgetResizable(True)
+        # self.index1_area.verticalScrollBar().valueChanged.connect(lambda: load_after(30))
         mainLayout = QGridLayout()
 
         def set_content(offer=0):
@@ -70,8 +71,8 @@ class Index(QTabWidget):
                 vbox.setStretch(1, 2)
                 vbox.setStretch(2, 1)
                 group.setLayout(vbox)
-                mainLayout.addWidget(group, j / 5, j % 5)
-            # 多线程下载图片。
+                mainLayout.addWidget(group, (j + 0 - 0) / 5, j % 5)
+            # # 多线程下载图片。
             for i in range(len(details)):
                 var['t' + str(i)].start()
 

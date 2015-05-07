@@ -4,3 +4,4 @@
 音乐播放,
 歌单推荐,
 音乐搜索.
+https://github.com/HuberTRoy/NetEase

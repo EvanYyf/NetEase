@@ -1,9 +1,13 @@
+__author__ = 'weiy'
+"""功能模块。"""
+
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from PyQt5.QtNetwork import * 
+from PyQt5.QtNetwork import *
 import os
 import api
+import shutil
 
 
 class LoginWindow(QDialog):
@@ -122,18 +126,72 @@ class LoginWindow(QDialog):
         self.m_drag=False
 
 
-class SongsWindow(QWidget):
+class SongsWindow(QListWidget):
     """我来组成歌曲列表。"""
     def __init__(self, parent=None):
         super(SongsWindow, self).__init__(parent)
-        self.setWindowFlags(Qt.FramelessWindowHint)
+        # 一些属性的设置。
+        self.setObjectName("currentlist")
         self.flag = True
         self.main = parent
-        self.content = QListWidget(self)
-        self.addContent()
-        self.hide()
+        self.setParent(self.main)
+        # 读入样式表。
         with open('func.qss', 'r') as q:
             self.setStyleSheet(q.read())
+        # 默认隐藏。
+        self.hide()
+        # 功能区start。
+        self.menu = QMenu(self)
+        self.act_clear = QAction('清空', self)
+        self.act_remove = QAction('删除', self)
+        # 功能区end.
+        # 加载函数。
+        self.set_action()
+        self.set_menu()
+        # 连接信号。
+        self.itemDoubleClicked.connect(lambda: self.main.set_song(self.currentItem().text().split(' - ')[0]\
+            ,self.currentItem().text().split(' - ')[1]))
+        self.itemDoubleClicked.connect(lambda: self.main.play_song())
 
-    def addContent(self):
-        self.content.addItem('1')
+    def set_menu(self):
+        """
+            设置右键菜单。
+        """
+        self.menu.setObjectName("rightmenu")
+
+    def set_action(self):
+        """
+            设置所有的action.
+        """
+        self.act_clear.triggered.connect(self.clears)
+        self.act_remove.triggered.connect(self.remove)
+
+    def clears(self):
+        self.clear()
+        self.main.stop_song()
+        shutil.rmtree('data/music/')
+        os.makedirs('.' + '/data/music')
+        os.makedirs('.' + '/data/music/load')
+
+    def remove(self):
+        os.remove('data/music/' + self.currentItem().text().replace(':', '.'))
+        self.takeItem(self.currentRow())
+        self.main.stop_song()
+        try:
+            content = self.currentItem().text().split(' - ')
+            name = content[0]
+            author = content[1]
+            self.main.set_song(name, author)
+            self.main.play_song()
+        except AttributeError:
+            pass
+
+    def contextMenuEvent(self, event):
+        item = self.itemAt(self.mapFromGlobal(QCursor.pos()))
+        if not item:
+            self.menu.addAction(self.act_clear)
+        else:
+            self.menu.addAction(self.act_remove)
+            self.menu.addAction(self.act_clear)
+        self.menu.exec_(QCursor.pos())
+

@@ -1,16 +1,20 @@
-QListWidget{
-    background: #555555;
-
+QListWidget::item:hover{
+    background: #000000;
+    color: white;
 }
 
-QListWidget::item:hover{
-    background: #555555;
-    color: gray;
-    font-size: 15px;
+QListWidget::item:selected{
+    background: #000000;
+    color: white;
+}
+
+QMenu{
+    border: 1px solid;
+    background: white;
+    color: black;
     font-weight: bold;
 }
 
-QListWidget::item:hover{
-    background: #000000;
-
+QMenu::item:selected{
+    background: lightgray;
 }

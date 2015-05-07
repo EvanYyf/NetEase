@@ -1,4 +1,4 @@
-__author__ = 'Administrator'
+__author__ = 'weiy'
 
 import sys
 import widget

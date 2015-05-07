@@ -230,6 +230,12 @@ QLabel#time2{
 
 }
 
+QLabel#songname{
+    text-align: center;
+    color: white;
+    font-weight: bold;
+}
+
 QLineEdit#SearchLine{
     background: #000000;
     border: 5px solid;
