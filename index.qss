@@ -8,6 +8,12 @@ QLabel{
     color: gray;
 }
 
+QLabel#tip{
+    color: white;
+    font-size: 30px;
+    font-weight: bold;
+}
+
 QLabel#pictures{
     width: 120px;
     height: 120px;

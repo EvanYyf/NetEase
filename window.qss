@@ -41,7 +41,7 @@ QPushButton#login::hover, QPushButton#exit::hover, QPushButton#mini::hover, QPus
     color: white;
 }
 
-QPushButton#find{
+QPushButton#find, QPushButton#locale{
    border: 5px;
    background-color: #D3D3D3;
    border-radius: 5px;
@@ -49,14 +49,14 @@ QPushButton#find{
 
 }
 
-QPushButton#find::hover{
+QPushButton#find::hover, QPushButton#locale::hover{
    border: 5px;
    background-color: gray;
    border-radius: 5px;
    font-weight: bold;
 }
 
-QPushButton#find::focus{
+QPushButton#find::focus, QPushButton#locale::focus{
    border: 5px;
    background-color: gray;
    border-radius: 5px;
@@ -135,9 +135,39 @@ QPushButton#before::hover{
     height: 36px;
 }
 
+QPushButton#cycle{
+    border-image: url(icons/cycle_1.png);
+    border: 0px solid;
+    width: 16px;
+    height: 16px;
+
+}
+
+QPushButton#cycle::hover{
+    border-image: url(icons/cycle_hover.png);
+    border: 0px solid;
+    width: 16px;
+    height: 16px;
+
+}
+
+QPushButton#single{
+    border-image: url(icons/single_1.png);
+    border: 0px solid;
+    width: 16px;
+    height: 16px;
+}
+
+QPushButton#single::hover{
+    border-image: url(icons/single_hover.png);
+    border: 0px solid;
+    width: 16px;
+    height: 16px;
+}
+
 QPushButton#songslist{
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     border-image: url(icons/list.png);
 }
 
@@ -252,33 +282,11 @@ QLineEdit#SearchLine::active{
     color: gray;
 }
 
-QListWidget{
-    border: 0px;
-    outline: none;
-    background: #363636;
-}
-
-QListWidget::item{
-    outline: #363636;
-    outline-style: none;
-    border: 0px solid #363636;
-    background-color: #363636;
-    color: #CCCCCC;
-    border-radius: 8px;
-}
-
-QListWidget::item:hover, QTableWidget#tablelist::item:hover{
+QTableWidget#tablelist::item:hover{
     outline: #363636;
     outline-style: none;
     background-color: #BFEFFF;
     color: #000000;
-}
-
-QListWidget::item:selected{
-    outline: #363636;
-    outline-style: none;
-    background-color: #363636;
-    color: #FFFFFF;
 }
 
 QTableWidget#tablelist::item:selected{

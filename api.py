@@ -36,7 +36,8 @@ class WebApi:
             'os': 'pc'
         }
 
-    def httpRequest(self, action, method="GET", add=None, data=None, headers=headers, cookies='', timeout=default_timeout, urlencode='utf-8'):
+    def httpRequest(self, action, method="GET", add=None, data=None, headers=headers, cookies='',\
+                    timeout=default_timeout, urlencode='utf-8'):
         """
             默认以get方式请求，
             GET方式附加内容用add参数，POST方式提交内容用data参数。

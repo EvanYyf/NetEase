@@ -1,11 +1,47 @@
-QListWidget::item:hover{
+QListWidget#currentlist{
+    background: #363636;
+    border: 0px;
+    outline: none;
+    color: lightgray;
+}
+
+QListWidget#currentlist::item:hover{
     background: #000000;
     color: white;
 }
 
-QListWidget::item:selected{
+QListWidget#currentlist::item:selected{
     background: #000000;
     color: white;
+}
+
+QListWidget#playlist{
+    border: 0px;
+    outline: none;
+    background: #363636;
+}
+
+QListWidget#playlist::item{
+    outline: #363636;
+    outline-style: none;
+    border: 0px solid #363636;
+    background-color: #363636;
+    color: #CCCCCC;
+    border-radius: 8px;
+}
+
+QListWidget#playlist::item:hover{
+    outline: #363636;
+    outline-style: none;
+    background-color: #BFEFFF;
+    color: #000000;
+}
+
+QListWidget#playist::item:selected{
+    outline: #363636;
+    outline-style: none;
+    background-color: #363636;
+    color: #FFFFFF;
 }
 
 QMenu{

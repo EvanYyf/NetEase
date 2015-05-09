@@ -35,22 +35,31 @@ class LoginWindow(QDialog):
         self.down_manager = QNetworkAccessManager()
         # -------
         # 布局与属性设置。
-        self.buttons()
-        self.loginframe()
+        self.set_buttons()
+        self.set_login_frame()
         self.setLayout(self.vlay())
         # -------
         # 其他功能。
 
-    def buttons(self):
+    def set_buttons(self):
+        """
+            设置所有按钮。
+        """
         self.btn_login.setObjectName('logins')
         self.btn_login.clicked.connect(self.lgn)
 
-    def loginframe(self):
+    def set_login_frame(self):
+        """
+            设置基本的登陆框架。
+        """
         self.text_user.setPlaceholderText("邮箱地址")
         self.text_pswd.setPlaceholderText("密码")
         self.text_pswd.setEchoMode(QLineEdit.Password)
 
     def vlay(self):
+        """
+            主布局。
+        """
         vbox = QVBoxLayout()
         vbox.addWidget(self.lbe_user)
         vbox.addWidget(self.text_user)
@@ -62,12 +71,20 @@ class LoginWindow(QDialog):
         return vbox
 
     def lgn(self):
+        """
+            登陆功能。
+        """
         user = self.text_user.text()
         pwd = self.text_pswd.text()
         func = api.WebApi()
-        result = func.login(user, pwd)[1]
+        # 离线功能。
+        try:
+            result = func.login(user, pwd)[1]
+        except:
+            self.lbe_hide.setText("网络不通，请检查网络。")
+            return
         if result['code'] == 200:
-            self.saveCookies(result['account']['userName'], result['profile']['nickname'],\
+            self.save_cookies(result['account']['userName'], result['profile']['nickname'],\
                              result['profile']['userId'])  # 保存cookies.
             self.main.btn_login.setText(result['profile']['nickname'])   # 加载昵称。
             self.main.btn_login.disconnect()
@@ -76,11 +93,14 @@ class LoginWindow(QDialog):
             self.down_manager.finished.connect(lambda: self.load_finish(tdata, result))    # 加载头像并保存。
             self.main.result['uid'] = result['profile']['userId']
             self.main.btn_login.setToolTip("登出")
-            self.main.play_lists()  # 加载歌单。
+            self.main.playlist.set_list()  # 加载歌单。
         else:
             self.lbe_hide.setText('登陆失败，检查后重试。')
 
-    def saveCookies(self, email, name, uid):
+    def save_cookies(self, email, name, uid):
+        """
+            保存cookies.
+        """
         try:
             os.chdir('.' + '/data' + '/cookies')
         except:
@@ -126,6 +146,54 @@ class LoginWindow(QDialog):
         self.m_drag=False
 
 
+class PlayList(QListWidget):
+    """我是歌单列表。"""
+    def __init__(self, parent):
+        super(PlayList, self).__init__(parent)
+        self.main = parent
+        # 一些属性设置。
+        self.setObjectName("playlist")
+        # 加载样式。
+        with open('func.qss', 'r') as q:
+            self.setStyleSheet(q.read())
+        # 功能区start。
+        self.menu = QMenu(self)
+        self.act_remove = QAction("删除", self)
+        # 功能区end.
+        # 加载函数。
+        self.set_action()
+
+    def set_list(self):
+        """
+            歌单列表。
+        """
+        for i in self.main.function.user_playlist(self.main.result['uid']):
+            self.addItem(QListWidgetItem(QIcon('icons/Heart.png'), i['name']))
+            self.main.result[i['name']] = i['id']
+            # 对应歌单的id添加。
+        self.clicked.connect(lambda: self.main.show_playlist(self.currentItem().text()))
+
+    def set_action(self):
+        self.act_remove.triggered.connect(self.remove_play)
+
+    def remove_play(self):
+        """
+            删除歌单。
+        """
+        pass
+
+    def contextMenuEvent(self, event):
+        """
+            右键菜单事件。
+        """
+        item = self.itemAt(self.mapFromGlobal(QCursor.pos()))
+        if not item:
+            pass
+        else:
+            self.menu.addAction(self.act_remove)
+            self.menu.exec_(QCursor.pos())
+
+
 class SongsWindow(QListWidget):
     """我来组成歌曲列表。"""
     def __init__(self, parent=None):
@@ -149,8 +217,8 @@ class SongsWindow(QListWidget):
         self.set_action()
         self.set_menu()
         # 连接信号。
-        self.itemDoubleClicked.connect(lambda: self.main.set_song(self.currentItem().text().split(' - ')[0]\
-            ,self.currentItem().text().split(' - ')[1]))
+        self.itemDoubleClicked.connect(lambda: self.main.set_song(self.currentItem().text().split(' - ')[1]\
+            ,self.currentItem().text().split(' - ')[0]))
         self.itemDoubleClicked.connect(lambda: self.main.play_song())
 
     def set_menu(self):
@@ -167,6 +235,9 @@ class SongsWindow(QListWidget):
         self.act_remove.triggered.connect(self.remove)
 
     def clears(self):
+        """
+            清空功能。
+        """
         self.clear()
         self.main.stop_song()
         shutil.rmtree('data/music/')
@@ -174,6 +245,9 @@ class SongsWindow(QListWidget):
         os.makedirs('.' + '/data/music/load')
 
     def remove(self):
+        """
+            删除功能。
+        """
         os.remove('data/music/' + self.currentItem().text().replace(':', '.'))
         self.takeItem(self.currentRow())
         self.main.stop_song()
@@ -187,6 +261,9 @@ class SongsWindow(QListWidget):
             pass
 
     def contextMenuEvent(self, event):
+        """
+            右键点击事件。
+        """
         item = self.itemAt(self.mapFromGlobal(QCursor.pos()))
         if not item:
             self.menu.addAction(self.act_clear)
@@ -194,4 +271,6 @@ class SongsWindow(QListWidget):
             self.menu.addAction(self.act_remove)
             self.menu.addAction(self.act_clear)
         self.menu.exec_(QCursor.pos())
+
+
 

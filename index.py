@@ -37,11 +37,17 @@ class Index(QTabWidget):
         self.index1_area.setWidget(self.index1)
         self.index1_area.setWidgetResizable(True)
         # self.index1_area.verticalScrollBar().valueChanged.connect(lambda: load_after(30))
-        mainLayout = QGridLayout()
+        main_layout = QGridLayout()
 
         def set_content(offer=0):
             var = locals()
-            details = self.func.all_playlist(offset=offer)
+            try:
+                details = self.func.all_playlist(offset=offer)
+            except:
+                tip = QLabel('暂时没有网络~~~，只能播放本地音乐。', self)
+                tip.setObjectName("tip")
+                main_layout.addWidget(tip, 0, 0, Qt.AlignCenter | Qt.AlignTop)
+                return
             for i, j in zip(details, range(len(details))):
                 self.main.result[i['name']] = i['id']
                 group = QGroupBox()
@@ -56,7 +62,7 @@ class Index(QTabWidget):
                         temp.insert(c+1, '\n')
 
                 middle.setText(''.join(temp))
-                middle.clicked.connect(emits)
+                middle.clicked.connect(lambda: emits())
                 last = QLabel(self.index1)
                 if len(i['creator']['nickname']) > 18:
                     last.setText('by:' + i['creator']['nickname'][:12] + '...')
@@ -71,7 +77,7 @@ class Index(QTabWidget):
                 vbox.setStretch(1, 2)
                 vbox.setStretch(2, 1)
                 group.setLayout(vbox)
-                mainLayout.addWidget(group, (j + 0 - 0) / 5, j % 5)
+                main_layout.addWidget(group, (j + 0 - 0) / 5, j % 5)
             # # 多线程下载图片。
             for i in range(len(details)):
                 var['t' + str(i)].start()
@@ -87,7 +93,7 @@ class Index(QTabWidget):
         #         set_content(offer=offer)
         set_content()
 
-        self.index1.setLayout(mainLayout)
+        self.index1.setLayout(main_layout)
 
     def set_index2(self):
         """
