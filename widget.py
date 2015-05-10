@@ -667,14 +667,22 @@ class Main(QWidget):
 
     def locale_show_on_table(self, path):
         songs_list = [i for i in os.listdir(path) if i[-3:] == 'mp3']
+        print(songs_list)
         self.table.setRowCount(len(songs_list))
         for i in range(len(songs_list)):
             temp = songs_list[i][:-4]
             temp2 = temp.split(' - ')
             self.table.setItem(i, 0, QTableWidgetItem(str(i)))
             self.table.setItem(i, 1, QTableWidgetItem(QIcon('icons/playlist.png'), ''))
-            self.table.setItem(i, 2, QTableWidgetItem(temp2[1]))
-            self.table.setItem(i, 3, QTableWidgetItem(temp2[0]))
+            try:
+                self.table.setItem(i, 2, QTableWidgetItem(temp2[1]))
+                self.table.setItem(i, 3, QTableWidgetItem(temp2[0]))
+            except IndexError:
+                self.table.setItem(i, 2, QTableWidgetItem(temp))
+                self.table.setItem(i, 3, QTableWidgetItem("暂时无法获取"))
+                self.playids[temp] = {}
+                self.playids[temp]["暂时无法获取"] = path + '\\' + songs_list[i]
+                continue
             self.table.setItem(i, 4, QTableWidgetItem("暂时无法获取"))
             self.table.setItem(i, 5, QTableWidgetItem("暂时无法获取"))
 
