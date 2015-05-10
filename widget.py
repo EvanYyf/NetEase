@@ -680,6 +680,8 @@ class Main(QWidget):
             except IndexError:
                 self.table.setItem(i, 2, QTableWidgetItem(temp))
                 self.table.setItem(i, 3, QTableWidgetItem("暂时无法获取"))
+                self.table.setItem(i, 4, QTableWidgetItem("暂时无法获取"))
+                self.table.setItem(i, 5, QTableWidgetItem("暂时无法获取"))
                 self.playids[temp] = {}
                 self.playids[temp]["暂时无法获取"] = path + '\\' + songs_list[i]
                 continue
