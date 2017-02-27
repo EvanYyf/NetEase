@@ -1,4 +1,7 @@
 NetEase.
+# 请看最新版本。
+https://github.com/HuberTRoy/MusicPlayer
+
 ======================
 使用PYQT5+Python3.4.1制作。
 需要安装Requests库。
