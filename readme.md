@@ -1,5 +1,5 @@
 NetEase.
-# 请看最新版本。
+# <a href='https://github.com/HuberTRoy/MusicPlayer'>请看最新版本。</a>
 https://github.com/HuberTRoy/MusicPlayer
 
 ======================
